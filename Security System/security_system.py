@@ -1,3 +1,4 @@
+import os
 import cv2
 import requests
 import threading
@@ -211,8 +212,28 @@ class SistemaSeguridad(ctk.CTk):
             self.video_display.configure(image=img_ctk)
 
     def log_to_excel(self, status):
-        # Lógica de Excel igual a la anterior
-        pass
+        # Solo guarda registros cuando el estado es RECHAZADO
+        if status != "RECHAZADO":
+            return
+
+        try:
+            excel_path = os.path.join(os.path.dirname(__file__), "registro_infracciones.xlsx")
+            fecha_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            nueva_fila = {"FechaHora": fecha_hora, "Estado": status}
+            df_nuevo = pd.DataFrame([nueva_fila])
+
+            if os.path.exists(excel_path):
+                try:
+                    df_existente = pd.read_excel(excel_path)
+                    df = pd.concat([df_existente, df_nuevo], ignore_index=True)
+                except Exception:
+                    df = df_nuevo
+            else:
+                df = df_nuevo
+
+            df.to_excel(excel_path, index=False)
+        except Exception as e:
+            print(f"Error guardando Excel: {e}")
 
 if __name__ == "__main__":
     app = SistemaSeguridad()
